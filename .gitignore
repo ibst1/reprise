@@ -1,0 +1,10 @@
+# The tool's own Backups folder holds real copies of real files — it is data the
+# tool produced, not source. Keeping it out also means a repo of this tool can be
+# published without carrying whatever happened to be backed up while testing.
+Backups/
+
+# Windows and editor noise
+Thumbs.db
+desktop.ini
+*.bak
+*.tmp
