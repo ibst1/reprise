@@ -81,10 +81,10 @@ the top of the file (`^`=Ctrl, `!`=Alt, `+`=Shift, `#`=Win).
   ```
   powershell -NoProfile -ExecutionPolicy Bypass -File .\Backup.ps1 "C:\path\to\testfile.txt"
   ```
-- **Blocked by the execution policy:** the calls already use `-ExecutionPolicy Bypass`.
-  If your workplace enforces a stricter policy through group policy (GPO), Bypass may be
-  ignored – let me know and I'll make a variant that runs as an encoded command instead
-  of a script file.
+- **Blocked by the execution policy:** the calls already pass `-ExecutionPolicy Bypass`,
+  but a machine-wide policy takes precedence over it. Where such a policy is in force
+  PowerShell will not run a script from a file at all, and Reprise cannot work as it
+  stands – the engines are script files.
 - **Every `Backups` folder has a `backup-log.txt`** with one line per run, tagged
   `[BACKUP]` or `[ARCHIVE]`.
 
