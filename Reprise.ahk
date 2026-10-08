@@ -20,9 +20,13 @@ if FileExist(ToolDir "\icons\tray.ico")
     TraySetIcon(ToolDir "\icons\tray.ico")
 A_IconTip := "Reprise`n" T("tray")
 
+; Only in Explorer windows — elsewhere the keys pass through untouched, so
+; Ctrl+Alt+M etc. keep working in Word and other programs.
+#HotIf WinActive("ahk_class CabinetWClass") || WinActive("ahk_class ExploreWClass")
 ^!b::RunTool(BackupPath, "",      T("doneBackup"))
 ^!m::RunTool(BackupPath, " -Move", T("doneArchive"))
 ^!r::RunTool(RestorePath, "",      T("doneRestore"))
+#HotIf
 
 ; ── Language ────────────────────────────────────────────────────────────────
 ; Same rule as the PowerShell engines (Lang.ps1): Reprise.ini decides, and

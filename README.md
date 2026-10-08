@@ -59,6 +59,9 @@ window and press:
 | **Ctrl+Alt+M** | Archive (move) |
 | **Ctrl+Alt+R** | Restore |
 
+The hotkeys are only active while an Explorer window has focus; in Word and other
+programs the same keys pass through untouched.
+
 A tooltip shows how many items were processed.
 
 **Start automatically at logon:** Win+R → `shell:startup` → Enter, put a shortcut to
