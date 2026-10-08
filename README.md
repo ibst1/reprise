@@ -26,7 +26,8 @@ themselves from there:
 | `Backup.ps1` | The engine for Backup and Archive (`-Move`). |
 | `Restore.ps1` | The restore engine. |
 | `Install-SendTo.ps1` | Run once – puts the three entries in your SendTo menu. |
-| `Reprise.ahk` | AutoHotkey v2 – hotkeys (see below). |
+| `Reprise.ahk` | AutoHotkey v2 – hotkeys and tray menu (see below). |
+| `Uninstall.ps1` | Removes Reprise's shortcuts and history from this machine. |
 
 ---
 
@@ -63,6 +64,15 @@ The hotkeys are only active while an Explorer window has focus; in Word and othe
 programs the same keys pass through untouched.
 
 A tooltip shows how many items were processed.
+
+**Tray menu** (right-click the icon):
+
+- **Most recent backups and moves** – the last ten runs, newest first, from the hotkeys
+  and Send To alike. Click one to open its Backups folder. The list is kept per
+  machine in `%LOCALAPPDATA%\Reprise\history.log`.
+- **GitHub repo** – opens https://github.com/ibst1/reprise.
+- **Uninstall** – see [Uninstall](#uninstall).
+- **Exit**
 
 **Start automatically at logon:** Win+R → `shell:startup` → Enter, put a shortcut to
 `Reprise.ahk` there. Change a hotkey by editing the lines `^!b::`, `^!m::`, `^!r::` at
@@ -119,6 +129,11 @@ checks this, because it is silent when it goes wrong.
 
 ## Uninstall
 
-- Remove the menu entries: Win+R → `shell:sendto` → delete the three `Backup`/`Archive`/`Restore` shortcuts.
-- Quit AHK: right-click the icon in the system tray → Exit (and remove any shortcut in `shell:startup`).
-- Delete the whole `Reprise` folder.
+Tray menu → **Uninstall**, or without AutoHotkey:
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Uninstall.ps1
+```
+It removes every Send To and startup shortcut that points into the Reprise folder
+(whatever language it was named in) and the history, then Reprise quits. Your backups
+are never touched, and neither is the `Reprise` folder itself – it may be synced or a
+git checkout, so delete it yourself if you want it gone.

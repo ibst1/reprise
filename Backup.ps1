@@ -102,6 +102,7 @@ $copied = 0
 $moved = 0
 $errors = @()
 $destinations = @()
+$history = @()
 
 foreach ($parent in $groups.Keys) {
     $groupItems = $groups[$parent]
@@ -116,6 +117,7 @@ foreach ($parent in $groups.Keys) {
     }
     $destinations += $dest
     $groupCopied = 0
+    $groupNames = @()
 
     foreach ($item in $groupItems) {
         $name = [System.IO.Path]::GetFileName($item)
@@ -125,6 +127,7 @@ foreach ($parent in $groups.Keys) {
             Copy-Item -LiteralPath $item -Destination $dest -Recurse -Force
             $copied++
             $groupCopied++
+            $groupNames += $name
         } catch {
             $errors += "Could not copy: $item`n$($_.Exception.Message)"
             continue
@@ -152,6 +155,22 @@ foreach ($parent in $groups.Keys) {
         $unit = T-Plural $groupCopied 'backup.item' 'backup.items'
         $logLine = '{0}  [{1}]  ->  {2}  ({3} {4})' -f $timestamp, $verb, $dest, $groupCopied, $unit
         Add-Content -LiteralPath (Join-Path $backupRoot 'backup-log.txt') -Value $logLine -Encoding UTF8
+    } catch { }
+
+    if ($groupCopied -gt 0) {
+        $history += ($timestamp, $verb, $dest, ($groupNames -join '|')) -join "`t"
+    }
+}
+
+# One central history, so the tray menu can list recent runs wherever they
+# happened. Per machine (LOCALAPPDATA): the paths only mean something here.
+# REPRISE_HISTORY lets the tests write somewhere harmless.
+if ($history.Count -gt 0) {
+    try {
+        $historyFile = if ($env:REPRISE_HISTORY) { $env:REPRISE_HISTORY }
+                       else { Join-Path $env:LOCALAPPDATA 'Reprise\history.log' }
+        New-Item -ItemType Directory -Path (Split-Path $historyFile) -Force | Out-Null
+        Add-Content -LiteralPath $historyFile -Value $history -Encoding UTF8
     } catch { }
 }
 

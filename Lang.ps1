@@ -79,6 +79,11 @@ $script:RepriseStrings = @{
         'sendto.backupDesc'   = 'Copy the selected items to a timestamped Backups folder'
         'sendto.archiveDesc'  = 'Copy to a timestamped Backups folder, then delete the originals'
         'sendto.restoreDesc'  = 'Put items back from a Backups folder'
+
+        # Uninstall.ps1
+        'uninstall.removed'   = 'Removed: {0}'
+        'uninstall.nothing'   = 'Nothing of Reprise was installed here.'
+        'uninstall.kept'      = 'The folder {0} was kept - delete it yourself if you no longer want it.'
     }
     sv = @{
         # Backup.ps1
@@ -122,6 +127,11 @@ $script:RepriseStrings = @{
         'sendto.backupDesc'   = 'Kopiera markerade objekt till en tidsstämplad Backups-mapp'
         'sendto.archiveDesc'  = 'Kopiera till en tidsstämplad Backups-mapp och ta sedan bort originalen'
         'sendto.restoreDesc'  = 'Lägg tillbaka objekt från en Backups-mapp'
+
+        # Uninstall.ps1
+        'uninstall.removed'   = 'Borttagen: {0}'
+        'uninstall.nothing'   = 'Inget av Reprise var installerat här.'
+        'uninstall.kept'      = 'Mappen {0} behölls - ta bort den själv om du inte längre vill ha den.'
     }
 }
 

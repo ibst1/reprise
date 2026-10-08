@@ -29,7 +29,7 @@ function Check($label, $ok, $detail = '') {
 # Windows PowerShell 5.1 reads a BOM-less file as ANSI, and AutoHotkey does the
 # same, so any file holding å/ä/ö MUST carry a UTF-8 BOM or its Swedish comes out
 # as "tidsstÃ¤mplad" — which then ends up in Send To entry names, on disk.
-foreach ($f in 'Lang.ps1', 'Reprise.ahk', 'Backup.ps1', 'Restore.ps1', 'Install-SendTo.ps1') {
+foreach ($f in 'Lang.ps1', 'Reprise.ahk', 'Backup.ps1', 'Restore.ps1', 'Install-SendTo.ps1', 'Uninstall.ps1') {
     $bytes = [IO.File]::ReadAllBytes((Join-Path $PSScriptRoot $f))
     $hasBom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
     $nonAscii = @($bytes | Where-Object { $_ -gt 127 }).Count -gt 0
@@ -54,7 +54,7 @@ Check 'no key is accidentally identical in both languages' ($unexpected.Count -e
 
 # ── keys the scripts ask for must exist ──────────────────────────────────────
 $used = @()
-foreach ($f in 'Backup.ps1', 'Restore.ps1', 'Install-SendTo.ps1') {
+foreach ($f in 'Backup.ps1', 'Restore.ps1', 'Install-SendTo.ps1', 'Uninstall.ps1') {
     $text = Get-Content -LiteralPath (Join-Path $PSScriptRoot $f) -Raw
     foreach ($m in [regex]::Matches($text, "T(?:-Plural)?\s+(?:\`$\w+\s+)?'([a-z]+\.[A-Za-z]+)'")) {
         $used += $m.Groups[1].Value
@@ -77,7 +77,9 @@ Check 'T-Plural picks the plural'   ((T-Plural 2 'backup.item' 'backup.items') -
 # ── the AutoHotkey table ─────────────────────────────────────────────────────
 $ahk = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Reprise.ahk') -Raw
 $ahkEn = @([regex]::Matches($ahk.Substring($ahk.IndexOf('"en", Map('), $ahk.IndexOf('"sv", Map(') - $ahk.IndexOf('"en", Map(')), '"(\w+)",\s+"') | ForEach-Object { $_.Groups[1].Value })
-$ahkSv = @([regex]::Matches($ahk.Substring($ahk.IndexOf('"sv", Map(')), '"(\w+)",\s+"') | ForEach-Object { $_.Groups[1].Value })
+$svStart = $ahk.IndexOf('"sv", Map(')
+$svText = $ahk.Substring($svStart, $ahk.IndexOf('))', $svStart) - $svStart)   # the table ends at "))"
+$ahkSv = @([regex]::Matches($svText, '"(\w+)",\s+"') | ForEach-Object { $_.Groups[1].Value })
 Check 'the AHK table has the same keys in both languages' (($ahkEn -join ',') -eq ($ahkSv -join ',')) `
       ("en: [$($ahkEn -join ',')] sv: [$($ahkSv -join ',')]")
 $ahkUsed = @([regex]::Matches($ahk, 'T\("(\w+)"\)') | ForEach-Object { $_.Groups[1].Value }) | Select-Object -Unique
@@ -87,6 +89,8 @@ Check 'every T("…") in the AHK layer exists' ($ahkMissing.Count -eq 0) "missin
 # ── the engines, end to end, in a temp folder ────────────────────────────────
 $t = Join-Path $env:TEMP ('reprise_test_' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force $t | Out-Null
+# Keep test runs out of the real history the tray menu lists.
+$env:REPRISE_HISTORY = Join-Path $t 'history.log'
 try {
     Set-Content (Join-Path $t 'one.txt') 'first' -Encoding UTF8
     Set-Content (Join-Path $t 'two.txt') 'second' -Encoding UTF8
@@ -103,6 +107,9 @@ try {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Backup.ps1') `
         -Move -Quiet (Join-Path $t 'two.txt') | Out-Null
     Check 'archive removes the original' (-not (Test-Path (Join-Path $t 'two.txt')))
+    $hist = @(Get-Content $env:REPRISE_HISTORY -Encoding UTF8)
+    Check 'the history has one line per run' ($hist.Count -eq 2) ($hist -join ' / ')
+    Check 'the history names the kind and the item' ($hist[1] -match "`tARCHIVE`t.+`ttwo\.txt$") $hist[1]
 
     # restore a single item — the case that used to fall through to "nothing to restore"
     Remove-Item (Join-Path $t 'one.txt') -Force
@@ -113,6 +120,7 @@ try {
     Check 'a single file restores' (Test-Path (Join-Path $t 'one.txt'))
     Check 'and keeps its content' ((Get-Content (Join-Path $t 'one.txt') -Raw).Trim() -eq 'first')
 } finally {
+    Remove-Item Env:\REPRISE_HISTORY -ErrorAction SilentlyContinue
     Remove-Item $t -Recurse -Force -ErrorAction SilentlyContinue
 }
 
