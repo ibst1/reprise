@@ -8,3 +8,7 @@ Thumbs.db
 desktop.ini
 *.bak
 *.tmp
+
+# build output (build.ps1)
+build/
+dist/
